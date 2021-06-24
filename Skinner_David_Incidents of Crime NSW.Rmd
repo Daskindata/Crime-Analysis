@@ -1,0 +1,322 @@
+---
+title: "If Crime doesn't pay, then is it a growth industry?"
+author: "David Skinner"
+date: "December 11, 2018"
+output:
+        html_document
+       
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## If Crime Doesn't Pay, then is it a growing industry?
+###            David Skinner
+
+
+
+```{r load packages, echo = TRUE, results = "hide"}
+packages <- c("cluster", "dbscan", "factoextra", "tm","dplyr","wordcloud","readxl", "rgl","foreign","stats", "ggplot2", "rgr", "class", "plot3D")
+if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
+  install.packages(setdiff(packages, rownames(installed.packages())))
+}
+# Load required libraries
+
+library(rgl)
+library("plot3D")
+library(ggplot2)
+library(stats)
+library(dbscan)
+library(scatterplot3d)
+library(foreign)
+library(dplyr)
+library(rgr)
+library(class)
+library(dbscan)
+library(cluster)
+library(dbscan)
+library(factoextra)
+library(tm)
+library(wordcloud)
+library(dplyr) 
+library(readxl)
+library(foreign)
+library(stats)
+library(factoextra)
+library(ISLR)
+```
+##If Crime Doesn't Pay, is it a growing profession?
+#                David Skinner
+##`Abstract:
+This report is an analysis of the basic incidents of crime in New South Wales. It is an attempt to understand the extent of crime and determine any type of pattern or relationship amongst the various categories of offences.  The data was obtained from the NSW Bureau of crime Statistics and Research which provides basic counts of incidents of crime including Crimes by offence type, month and Local Government Area for the period of Jan 1995 to Dec 2012. Unsupervised Data mining methods were applied including PCA analysis, Custer Analysis, and Outlier Detection.   Analysis of the results, suggest there are strong similarities between the observations, positive trend relationships and dense proximity clustering determined by visualization of the data. The incident counts of crime appear to be consistent across the offence categories, it is the diversity in offence categories over time that should be of concern to crime prevention and law and order professionals.  Perhaps the incidents of Crime for existing offence categories are not trending up, it's the offence categories that are increasing.
+
+####Introduction
+
+This report considers the various categories of criminal offences,  in the context of the incident counts over time. By perception crime is on the increase with increased media in news and programs with a crime theme. It seems to be everywhere.   "From the 1960s to the 1990s, rates for violent and property crimes rose in all wealthy Western countries. Since then, rates in all have fallen precipitately for homicide, burglary, auto theft, and other property crimes."(Tonry 2014). The objective of  the analysis was to consider the similarity or dissimilarity of observations to gauge any real variation in the count observations and determine if there is any evidence of variation in count data for incidents of crime.
+
+```{R Load Data, echo = FALSE,results = "hide"}
+crime <- read.csv("H:/JCU/MA5810/Week 6/rci-offencebymonth.csv", header=FALSE, na.strings=c("?"), sep=",", dec=".")
+summary(crime) # 
+#names(crime) <- lapply(crime[1, ], as.character)
+crime <- crime[-1,] 
+crime_data <- crime[,-1:-4]# without Row 1 category labels & cols Stat Div, LGA, off cat & sub cat V1 V2 v3, V4
+crime_dat <- crime[,-1:-2] # without Stat Div, LGA, cat V1 V2 
+crime_dat_cat <- crime_dat[,-2]#without sub cat
+crime_dat_cat <-na.omit(crime_dat_cat)# without Nas
+names(crime_dat_cat)[1] <- "offence_cat"
+CR_class <- crime[,3] # Class labels (V3)
+
+```
+####Data:
+
+The data was obtained from the data.gov.au website. The data provides counts of crime offences for various offence categories. The data is maintained and published by NSW Bureau of Crime Statistics and Research of the NSW state Government. It commenced in 1995 and is updated on a monthly basis. It contains monthly data on all criminal incidents recorded by police in NSW, spanning a period from Jan 1995 to December 2012. 
+The sample size is 9614 observations with 220 variables consisting of Statistical Division, Local Government Area, Offence category and subcategory with monthly counts  of offences and are factor variables. The offence category was grouped within the csv file. 
+
+####Method:
+The purpose of the research is to investigate the similarities, variations and relationship trends in the 
+data applying unsupervised data mining techniques. The data preprocessing methods I applied to the 
+dataset included data representation, Type conversion, missing value imputation, transformation and  
+exploratory visualization using scatter3D() and ggplot2() (RStudio Team 2016).
+
+I first removed columns of data that were not included into the unsupervised data mining methods. I 
+the dataframe was converted to a numeric version of matrix and performed the Principal  Component 
+Analysis, Calculated the Proportion of Variance Explained (PVE) and used plot() and plotted a cumulative sum of the PVE values, created a dataframe of PC1 PC2 & PC3 components  and applied scatter3D() at various angles.
+
+Cluster analysis was performed, NA values were removed and scaled as a matrix and created a 
+distance matrix using dist() , the performed a hierarchy cluster using hclust() which produced 
+dendrograms from which single, complete, average and wards linkage methods were applied. 
+The same process was applied again with normalized data using scale() to determine if it produced any different results.
+
+Unsupervised outlier detection was then performed using KNNdist() KNN parameters were set a different values 5, 25 & 100 and  the top 50 outliers were called  and output was visualized using ggplot()  the outliers were set as colour red and remaining points as black
+
+Contingency tables were produced, NA values were removed using  na.omit() and the matrix coerced to numeric and clustering performed using hbdscan(). minPts was set to 3 which produced 16 clusters 
+including outliers.   Contingency tables were used using clusplot() to include outliers classed as zeros 
+and another table leaving the outliers out. 
+
+####Results:
+
+The Principal Component Analysis (PCA) and the Proportion of Variance explained (PVE) provides evidence that each of the components were small values and majority explained the variation in the variables, evidenced by the cumulative sum of the PVE values. The PCA 3D plot shows an even distribution of points in a U shape with consistent variation from the n observations. The first principal component is the line in P dimensional space closets to the n observations and the subsequent principal components are evenly distributed away from the centre.    The more central PCA values,  explain more variability than others. The first principal component explains approximately 84% of variance in that data with the remaining principal components explaining approximately 16%.  This means it provides a very accurate summary of the data just using the first Principal Component. Using three principal components provides a very accurate summary of the data. 
+
+The Wards linkage dendogram hierarchical clustering illustrates that the observations have strong similarity as they fuse at a very low point and same height on the vertical axis. In this case it is difficult to identify the number of clusters but there are 5 that are more evident. And majority of the observations are grouped in the left hand end of the dendogram.  
+
+The unsupervised outlier detection method using K nearest neighbor KNN() provides an interesting visualisation in that for the K = 100 plot the observations are located and spread evenly by the majority low on the Y axis along the spread of the X axis with the outliers positioned in amongst the observations considered to be central.  This is confirmed by the Wards dendrogram with strong similarity amongst the observations.
+
+Clustering methods using hbdscan() which applies a hierarchical clustering method plotting the data shows a strong positive linear relationship amongst the data observations. Using cluspot() and setting the minPts = 3 creates 16 clusters including the outliers represented as zero (0).   The Euclidean method is a dissimilarity measure which suggests the distance between the observations a extremely small, hence strong similarity.  There are outliers represented by 0 are present however the distance from each of the 15 clusters  are small, evidenced earlier in the outlier detection process. A contingency table without the outliers really articulates the dissimilarity measure, outliers are difficult to identify and the clusters a very closely grouped, once again demonstrating strong similarity.
+
+The observations are numeric counts of crime offences and demonstrating strong similarity across the 23 crime offence categories which suggests that no offence category has higher incidents of crime counts than any other. If incidents of crime are on the increase than perhaps it's the types of crimes being committed are growing.      
+
+####Conclusions: 
+
+The objective of the analysis was to determine if there was an upward trend in incidents or crime, by applying unsupervised data mining methods, and analyzing the various visualization tools to form some position on the matter. The visualization methods applied show that there is strong similarity amongst the observations, and as they represent count data for a number of crime offence categories, suggests that each offence has a similarity to each other, that being counts of crime incidents. 
+
+If crime was on the increase then perhaps it is the categories of crime that are growing i.e.  cyber crime which is allegedly growing at the rate of technology. Future work could focus on the types of crime offences, are they trends developing with societal change globally, mainly  through technology advances and detection. 
+
+The limitations of the analysis is that regression wasn't applied, however the data is large with many variables representing the time series nature of over 17 years in the data, without a relevant dependent variable it's difficult to validate any findings, a simple count would provide the leading crime offence over the period, and not really provide any meaningful interpretation. 
+
+####References:
+
+Michael Tonry, Why Crime Rates Are Falling Throughout the Western World, 43 Crime & Just. 1 (2014), available at http://scholarship.law.umn.edu/faculty_articles/511.
+
+RStudio Team (2016). RStudio: Integrated Development for R. RStudio, Inc., Boston, MA URL http://www.rstudio.com/. Version ''1.1.463'
+
+http://data.gov.au/storage/f/2013-09-12T23%3A32%3A36.918Z/rci-offencebymonth.csv accessed 06/12/2018
+
+
+```{R PCA Analysis, echo = TRUE, include = FALSE}
+#PCA Analysis
+crime_data[,1:216] <- as.numeric(as.matrix(crime_data[,1:216]))
+PCA <- prcomp(~., data=crime_data, na.action = na.omit, scale = TRUE)
+PCA$rotation
+PVE <- (PCA$sdev^2)/sum(PCA$sdev^2)
+#plot(cumsum(PVE), xlab ="Principal Component", ylab ="Proportion of Variance Explained", ylim=c(0,1) ,type="b")
+PVE
+
+PCA_3D_dat <- as.data.frame(PCA$rotation[,1:3])
+x <- PC1 <- PCA_3D_dat$PC1 
+y <- PC2 <- PCA_3D_dat$PC2 
+z <- PC3 <- PCA_3D_dat$PC3
+```
+```{R Plot PVE}
+plot(cumsum(PVE), xlab ="Principal Component", ylab ="Proportion of Variance Explained", ylim=c(0,1) ,type="b")
+```
+```{r 3D Plots}
+## Including 3D Plots
+s_PCA1 <- scatter3D(x = PC1,y = PC2,z = PC3, colvar = z,  pch = 19,  cex = 1, theta = 20, phi = 10, 
+                    main="My 3D + PCA1", xlab="PC1", ylab="PC2", zlab="PC3") 
+s_PCA2 <- scatter3D(x = PC1,y = PC2,z = PC3 , colvar = z,  pch = 19,  theta = 30, phi = 15, xlab="PC1",main="My 3D + PCA2",ylab="PC2",  zlab="PC3")
+s_PCA3 <- scatter3D(x = PC1,y = PC2,z = PC3 , colvar = z, pch = 19,  theta = 40, phi = 40, xlab="PC1",main="My 3D + PCA3",ylab="PC2",
+                    zlab="PC3")
+ ```
+```{R Cluster Analysis}
+#Cluster analysis
+# compute a matrix containing all the pairwise Euclidean distances
+crime_df <- na.omit(crime_data)
+head(crime_df)
+cr_dat <- as.matrix(crime_df, scale = TRUE)
+#crime_df <- scale(crime_df)
+cr_DM <- dist(crime_df, method = "euclidean", diag = FALSE, upper = FALSE, p = 2)
+
+# Single-Linkage clustering algorithm
+SL_crime = hclust(cr_DM, method ="single")        
+#plot(SL_crime, main = "Single Linkage", xlab = "", sub = "", hang = -1)
+
+# The complete-linkage algorithm
+CL_crime <- hclust(cr_DM, method = "complete")
+#plot(CL_crime, main = "Complete Linkage", xlab = "", sub = "", hang = -1)
+
+#Item 6: Average-linkage algorithm
+AL_crime <- hclust(cr_DM, method = "average")
+#plot(AL_crime, main = "Average Linkage", xlab = "", sub = "", hang = -1)
+
+#Item 7: Ward's algorithm
+Ward_crime <- hclust(cr_DM, method = "ward.D2")
+#plot(Ward_crime, main = "Ward's", xlab = "", sub = "", hang = -1)
+
+# now using normalised data
+crime_normData <- scale(crime_df, center = TRUE, scale = TRUE)
+cr  <- as.matrix(crime_normData)
+#compute a matrix containing all the pairwise Euclidean distances
+crime_Distmatrix <- dist(cr, method = "euclidean", diag = FALSE, upper = FALSE, p = 2)
+
+#Single-Linkage clustering algorithm
+SL_crimeNorm = hclust(crime_Distmatrix, method ="single")        
+#plot(SL_crimeNorm, main = "Single Linkage Normalised", xlab = "", sub = "", hang = -1)
+
+#The complete-linkage algorithm
+CL_crimeNorm = hclust(crime_Distmatrix, method ="complete")        
+#plot(CL_crimeNorm, main = "Complete Linkage Normalised", xlab = "", sub = "", hang = -1)
+
+#Average-linkage algorithm with normalised matrix
+AL_crimeNorm = hclust(crime_Distmatrix, method ="average")        
+#plot(AL_crimeNorm, main = "Average Linkage Normalised", xlab = "", sub = "", hang = -1)
+
+#Ward's algorithm with normalised matrix
+Ward_crimeNorm = hclust(crime_Distmatrix, method ="ward.D2")        
+#plot(Ward_crimeNorm, main = "Ward's Normalised", xlab = "", sub = "", hang = -1)
+
+```
+```{R Dendograms}
+#plot dendograms
+plot(SL_crime, main = "Single Linkage", xlab = "", sub = "", hang = -1)
+plot(CL_crime, main = "Complete Linkage", xlab = "", sub = "", hang = -1)
+plot(AL_crime, main = "Average Linkage", xlab = "", sub = "", hang = -1)
+plot(Ward_crime, main = "Ward's", xlab = "", sub = "", hang = -1)
+# Plot dendograms with normalised data
+plot(SL_crimeNorm, main = "Single Linkage", xlab = "", sub = "", hang = -1)
+plot(CL_crimeNorm, main = "Complete Linkage Normalised", xlab = "", sub = "", hang = -1)
+plot(AL_crimeNorm, main = "Average Linkage Normalised", xlab = "", sub = "", hang = -1)
+plot(Ward_crimeNorm, main = "Ward's Normalised", xlab = "", sub = "", hang = -1)
+
+```
+```{R  Outlier Detection}
+# Unsupervised outlier detection
+k <- 5 # KNN parameter K= 5
+KNN_Outlier <- kNNdist(x=crime_df, k = k)[,k] # KNN distance (outlier score) computation
+rank_KNN_Outlier <- order(x=KNN_Outlier, decreasing = TRUE) # Sorting (descending)
+KNN_Result <- data.frame(ID = rank_KNN_Outlier, score = KNN_Outlier[rank_KNN_Outlier])
+head(KNN_Result)
+dat_knn <- data.frame(x1 = c(KNN_Result$ID), x2 = c(KNN_Result$score))
+#(g0a <- ggplot() + geom_point(data=dat_knn, mapping=aes(x=x1, y=x2), shape = 19))
+
+k <- 5 # KNN parameter K= 5
+KNN_Outlier <- kNNdist(x=crime_df, k = k)[,k] # KNN distance (outlier score) computation
+top_n <- 50 # No. of top outliers to be displayed
+rank_KNN_Outlier <- order(x=KNN_Outlier, decreasing = TRUE) # Sorting (descending)
+KNN_Result1 <- data.frame(ID = rank_KNN_Outlier, score = KNN_Outlier[rank_KNN_Outlier])
+head(KNN_Result1, top_n)
+
+dat_knn1 <- data.frame(x1 = c(KNN_Result1$ID), x2 = c(KNN_Result1$score))
+#(g0a1 <- g0a + 
+    #geom_point(data=dat_knn1[rank_KNN_Outlier[1:top_n],], mapping=aes(x = x1, y = x2), shape=19, color="red", size=2) +
+    #geom_text(data=dat_knn1[rank_KNN_Outlier[1:top_n],],
+              #mapping=aes(x = x1, y = x2, label=rank_KNN_Outlier[1:top_n]), size=2.5))
+
+k <- 25 # KNN parameter K= 25
+KNN_Outlier <- kNNdist(x=crime_df, k = k)[,k] # KNN distance (outlier score) computation
+top_n <- 50 # No. of top outliers to be displayed
+rank_KNN_Outlier <- order(x=KNN_Outlier, decreasing = TRUE) # Sorting (descending)
+KNN_Result2 <- data.frame(ID = rank_KNN_Outlier, score = KNN_Outlier[rank_KNN_Outlier])
+head(KNN_Result2, top_n)
+dat_knn2 <- data.frame(x1 = c(KNN_Result2$ID), x2 = c(KNN_Result2$score))
+#(g0a2 <- g0a + 
+    #geom_point(data=dat_knn2[rank_KNN_Outlier[1:top_n],], mapping=aes(x = x1, y = x2), shape=19, color="red", size=2) +
+    #geom_text(data=dat_knn2[rank_KNN_Outlier[1:top_n],],
+              #mapping=aes(x = x1, y = x2, label=rank_KNN_Outlier[1:top_n]), size=2.5))
+
+k <- 100 # KNN parameter K= 100
+KNN_Outlier <- kNNdist(x=crime_df, k = k)[,k] # KNN distance (outlier score) computation
+top_n <- 50 # No. of top outliers to be displayed
+rank_KNN_Outlier <- order(x=KNN_Outlier, decreasing = TRUE) # Sorting (descending)
+KNN_Result3 <- data.frame(ID = rank_KNN_Outlier, score = KNN_Outlier[rank_KNN_Outlier])
+head(KNN_Result3, top_n)
+dat_knn3 <- data.frame(x1 = c(KNN_Result3$ID), x2 = c(KNN_Result3$score))
+#(g0a3 <- g0a + 
+   # geom_point(data=dat_knn3[rank_KNN_Outlier[1:top_n],], mapping=aes(x = x1, y = x2), shape=19, color="red", size=2) +
+    #geom_text(data=dat_knn3[rank_KNN_Outlier[1:top_n],],
+             # mapping=aes(x = x1, y = x2, label=rank_KNN_Outlier[1:top_n]), size=2.5))
+```
+```{R Plot Outliers}
+# Plot Outliers
+(g0a <- ggplot() + geom_point(data=dat_knn, mapping=aes(x=x1, y=x2), shape = 19))
+# K= 5
+(g0a1 <- g0a + 
+    geom_point(data=dat_knn1[rank_KNN_Outlier[1:top_n],], mapping=aes(x = x1, y = x2), shape=19, color="red", size=2) +
+    geom_text(data=dat_knn1[rank_KNN_Outlier[1:top_n],],
+              mapping=aes(x = x1, y = x2, label=rank_KNN_Outlier[1:top_n]), size=2.5))
+#K=25
+(g0a2 <- g0a + 
+    geom_point(data=dat_knn2[rank_KNN_Outlier[1:top_n],], mapping=aes(x = x1, y = x2), shape=19, color="red", size=2) +
+    geom_text(data=dat_knn2[rank_KNN_Outlier[1:top_n],],
+              mapping=aes(x = x1, y = x2, label=rank_KNN_Outlier[1:top_n]), size=2.5))
+# K = 100
+  (g0a3 <- g0a + 
+    geom_point(data=dat_knn3[rank_KNN_Outlier[1:top_n],], mapping=aes(x = x1, y = x2), shape=19, color="red", size=2) +
+    geom_text(data=dat_knn3[rank_KNN_Outlier[1:top_n],],
+              mapping=aes(x = x1, y = x2, label=rank_KNN_Outlier[1:top_n]), size=2.5))
+echo = FALSE  
+```
+```{R Clusters}
+crime_dat_cat <-na.omit(crime_dat_cat)# without Nas
+crime_dat_cat[,2:217] <- as.numeric(as.matrix(crime_dat_cat[,2:217]))
+sc_crime_data <- scale(crime_dat_cat[,-1 ])
+crime_dm <- as.matrix(sc_crime_data)
+crime_dm <- na.omit(crime_dm)
+set.seed(0)
+hdbs_crime <- hdbscan(crime_dm, minPts = 3)
+hdbs_crime
+color_1to8 <- function(x) ifelse(x==0,1,((x-1)%%7)+2)
+
+hc = hclust(d = dist(crime_dm, method = 'euclidean'), method = 'ward.D2')
+y_hc = cutree(hc, 14)
+```
+```{R Plot clusters}
+# Plot Clusters
+plot(sc_crime_data, pch=19, cex=0.5, col=color_1to8(hdbs_crime$cluster), 
+     xlab="x1", ylab="x2")
+
+#Plot a contingency table of clusters (where '0' means objects left unclustered as noise/outliers)
+clusplot(crime_dm, 
+         hdbs_crime$cluster, 
+         lines = 0, 
+         shade = TRUE, 
+         color = TRUE,
+         labels = 2, 
+         plotchar = FALSE, 
+         span = TRUE, 
+         main  = paste("Clusters of Offences"),
+         xlab="x1", ylab="x2" )
+
+# Plot clusters without outliers minPts 3 
+clusplot(crime_dm,
+         y_hc,
+         lines = 4,
+         shade = TRUE,
+         color = TRUE,
+         labels= 2,
+         plotchar = FALSE,
+         span = TRUE,
+         main = paste('Clusters of offences'),
+         xlab = 'x1',
+         ylab = 'x2')
+```
